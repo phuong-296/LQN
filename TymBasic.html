@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A moment of feeling something special</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #2b050b 0%, #050008 45%, #000 100%);
+      overflow: hidden;
+      color: #fff;
+    }
+    #overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-backdrop-filter: blur(18px); /* Thêm dòng này cho Safari */
+      backdrop-filter: blur(18px);
+      background: radial-gradient(
+        circle at top,
+        rgba(255, 72, 0, 0.25) 0%,
+        rgba(10, 0, 10, 0.95) 45%,
+        rgba(0, 0, 0, 1) 100%
+      );
+      z-index: 10;
+      transition: opacity 0.9s ease, transform 0.9s ease;
+    }
+    #overlay.hidden {
+      opacity: 0;
+      transform: scale(1.05);
+      pointer-events: none;
+    }
+    .card {
+      padding: 26px 40px;
+      border-radius: 24px;
+      background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.1),
+          rgba(0, 0, 0, 0.25)
+        );
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.9),
+        0 0 40px rgba(255, 80, 0, 0.6);
+      text-align: center;
+      max-width: 420px;
+    }
+    #gift-icon {
+      font-size: 76px;
+      cursor: pointer;
+      margin-bottom: 8px;
+      filter: drop-shadow(0 0 25px #ff5b2b);
+      animation: floatGift 2.1s ease-in-out infinite;
+    }
+    @keyframes floatGift {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-8px) scale(1.06); }
+    }
+    .title {
+      font-size: 22px;
+      letter-spacing: 0.16em;
+      color: #ffb48a;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #fefefe;
+      opacity: 0.85;
+      margin-bottom: 20px;
+    }
+    #btn-start {
+      margin-top: 6px;
+      padding: 12px 36px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #160204;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ff2b52, #ff47bb);
+      box-shadow: 0 0 24px rgba(255, 96, 32, 0.85);
+      display: none;
+      position: relative;
+      overflow: hidden;
+    }
+    #btn-start::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        circle at top left,
+        rgba(255, 255, 255, 0.35),
+        transparent 55%
+      );
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    #btn-start:hover::before { opacity: 1; }
+    #hint { font-size: 12px; opacity: 0.7; margin-top: 10px; }
+
+    canvas { display: block; position: fixed; inset: 0; }
+
+    /* Popup chiếc nhẫn */
+    #proposal {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      z-index: 12;
+    }
+    #proposal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .proposal-card {
+      padding: 26px 32px 30px;
+      border-radius: 24px;
+      background: radial-gradient(circle at top, #2b0611 0%, #050008 70%);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.95),
+        0 0 40px rgba(255, 215, 0, 0.7);
+      text-align: center;
+      max-width: 420px;
+    }
+    .ring-icon {
+      font-size: 88px;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 0 25px #ffd700);
+      animation: ringPulse 1.8s ease-in-out infinite;
+    }
+    @keyframes ringPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.07); }
+    }
+    .proposal-title {
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+    .proposal-text {
+      font-size: 15px;
+      opacity: 0.9;
+      margin-bottom: 20px;
+    }
+    .proposal-actions {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+    }
+    .btn {
+      padding: 10px 26px;
+      border-radius: 999px;
+      border: none;
+      font-size: 15px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-yes {
+      background: linear-gradient(135deg, #ffd700, #ffb347);
+      color: #3c2200;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+    }
+    .btn-no {
+      background: rgba(255, 255, 255, 0.06);
+      color: #f0f0f0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .answer-text {
+      margin-top: 14px;
+      font-size: 14px;
+      opacity: 0.85;
+      min-height: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div id="overlay">
+    <div class="card">
+      <div id="gift-icon">🎁</div>
+      <div class="title">Gửi đến người xinh đẹp, dịu dàng yêu kiều nhất của tôi. Từ lần đầu tiên gặp e, tôi đã say nắng mất gòi💖💖💖</div>
+      <div class="subtitle">
+        Điều bất ngờ dành cho bạn (ngoại lệ của tuii ) ở phía sau hộp quà ấy ^_^
+      </div>
+      <button id="btn-start">Khui quà ik❤️‍🔥</button>
+      
+    </div>
+  </div>
+
+  <!-- Popup hỏi đồng ý -->
+  <div id="proposal">
+    <div class="proposal-card">
+      <div class="ring-icon">💍</div>
+      <div class="proposal-title">Liễu Quỳnh Như có đồng ý không?</div>
+      <div class="proposal-text">
+        Cho anh nắm tay em, từ màn hình này tới ngoài đời thật nhé.
+      </div>
+      <div class="proposal-actions">
+        <button class="btn btn-yes" id="btn-yes">ĐỒNG Ý</button>
+        <button class="btn btn-no" id="btn-no">Để Nghĩ Thêm 😆</button>
+      </div>
+      <div class="answer-text" id="answer"></div>
+    </div>
+  </div>
+
+  <canvas id="heartCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById("heartCanvas");
+    const ctx = canvas.getContext("2d");
+    const overlay = document.getElementById("overlay");
+    const gift = document.getElementById("gift-icon");
+    const btn = document.getElementById("btn-start");
+    const proposal = document.getElementById("proposal");
+    const btnYes = document.getElementById("btn-yes");
+    const btnNo = document.getElementById("btn-no");
+    const answer = document.getElementById("answer");
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener("resize", resize);
+
+    const colors = ["#D6E0E2", "#FCE866", "#F677A4", "#ffe4b3", "#5FFF28", "#E59B69", "#ffe4b3"
+    , "#D297BB", "#74BA98", "#E3A187", "#338279", "#B3765A"];
+    let particles = [];
+    let tick = 0;
+    let running = false;
+    let heartFade = 1; // để fade trái tim trước khi hiện nhẫn
+
+    class Particle {
+      constructor() {
+        const t = Math.random() * Math.PI * 2;
+        const r = Math.pow(Math.random(), 0.8);
+        const baseX = 16 * Math.pow(Math.sin(t), 3);
+        const baseY =
+          13 * Math.cos(t) -
+          5 * Math.cos(2 * t) -
+          2 * Math.cos(3 * t) -
+          Math.cos(4 * t);
+
+        this.tx = baseX * r;
+        this.ty = -baseY * r;
+        this.tz = (Math.random() - 0.5) * 6;
+
+        this.x = canvas.width / 2;
+        this.y = canvas.height / 2;
+        this.z = 0;
+
+        this.baseSize = Math.random() * 1.7 + 1.1;
+        this.size = this.baseSize;
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+        this.opacity = Math.random() * 0.4 + 0.6;
+        this.phase = Math.random() * Math.PI * 2;
+      }
+
+      update(tick) {
+        const tBeat = tick * 0.11;
+        const beat =
+          1 +
+          0.45 *
+            Math.exp(-Math.pow((tBeat % (2 * Math.PI)) - 0.9, 2) * 7) +
+          0.28 *
+            Math.exp(-Math.pow((tBeat % (2 * Math.PI)) - 1.7, 2) * 14);
+
+        const angleY = tick * 0.01;
+        const cosY = Math.cos(angleY);
+        const sinY = Math.sin(angleY);
+
+        let rx = this.tx * cosY - this.tz * sinY;
+        let rz = this.tx * sinY + this.tz * cosY;
+
+        const perspective = 600 / (600 + rz);
+        const destX = canvas.width / 2 + rx * 22 * perspective * beat;
+        const destY = canvas.height / 2 + this.ty * 22 * perspective * beat;
+
+        this.x += (destX - this.x) * 0.12;
+        this.y += (destY - this.y) * 0.12;
+
+        const pulse = 0.4 + 0.6 * Math.sin(tBeat + this.phase);
+        this.size = this.baseSize * (0.9 + pulse * 0.5);
+        this.opacity = (0.35 + 0.65 * pulse) * heartFade;
+      }
+
+      draw() {
+        ctx.globalAlpha = Math.max(0, Math.min(1, this.opacity));
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 16 + this.size * 3;
+        ctx.shadowColor = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function animate() {
+      if (!running) return;
+
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = "rgba(3, 0, 8, 0.3)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.globalCompositeOperation = "screen";
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.update(tick);
+        p.draw();
+      }
+
+      tick++;
+      requestAnimationFrame(animate);
+    }
+
+    function playSound() {
+      const audioCtx = new (window.AudioContext ||
+        window.webkitAudioContext)();
+      const seq = [
+        { f: 196.0, t: 0 },
+        { f: 261.63, t: 0.16 },
+        { f: 329.63, t: 0.32 },
+        { f: 392.0, t: 0.55 }
+      ];
+      seq.forEach(s => {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(s.f, audioCtx.currentTime + s.t);
+        g.gain.setValueAtTime(0.22, audioCtx.currentTime + s.t);
+        g.gain.exponentialRampToValueAtTime(
+          0.0001,
+          audioCtx.currentTime + s.t + 0.5
+        );
+        osc.connect(g);
+        g.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + s.t);
+        osc.stop(audioCtx.currentTime + s.t + 0.6);
+      });
+    }
+
+    // hiển thị popup chiếc nhẫn sau vài giây
+    function showRingProposal() {
+      // fade tim trong 1.5s
+      const fadeSteps = 60;
+      let step = 0;
+      const fadeInterval = setInterval(() => {
+        step++;
+        heartFade = Math.max(0, 1 - step / fadeSteps);
+        if (step >= fadeSteps) {
+          clearInterval(fadeInterval);
+          running = false; // dừng animate
+          proposal.classList.add("active");
+        }
+      }, 25);
+    }
+
+    gift.addEventListener("click", () => {
+      gift.style.animation = "none";
+      gift.style.transform = "scale(0.9)";
+      setTimeout(() => {
+        gift.style.display = "none";
+        btn.style.display = "inline-flex";
+      }, 160);
+    });
+
+    btn.addEventListener("click", () => {
+      overlay.classList.add("hidden");
+      playSound();
+
+      particles = [];
+      for (let i = 0; i < 2200; i++) {
+        particles.push(new Particle());
+      }
+      running = true;
+      animate();
+
+      // set sau 10 giây cho chuyển tab
+      setTimeout(showRingProposal, 10000);
+    });
+
+    btnYes.addEventListener("click", () => {
+      answer.textContent = "Kìa hỏi chơi thôi mà đồng ý luôn, e bị ảo tưởng à? :)";
+    });
+
+    btnNo.addEventListener("click", () => {
+      answer.textContent = "Không chịu thì thôi chắc thèm à, ế phải rồi hihi :)";
+    });
+  </script>
+</body>
+</html>
